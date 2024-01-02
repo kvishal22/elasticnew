@@ -1,6 +1,7 @@
 package com.kanna.elastic.entity;
 
 
+import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 
 import javax.annotation.processing.Generated;
@@ -8,7 +9,7 @@ import javax.annotation.processing.Generated;
 @Document(indexName = "hethai")
 public class Hethai {
 
-
+@Id
     private int id;
     private String name;
     private String place;

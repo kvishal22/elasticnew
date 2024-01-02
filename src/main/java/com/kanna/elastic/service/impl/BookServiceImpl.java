@@ -1,10 +1,14 @@
 package com.kanna.elastic.service.impl;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.kanna.elastic.entity.Book;
 import com.kanna.elastic.repo.BookRepo;
 import com.kanna.elastic.service.BookService;
 import com.kanna.elastic.service.exception.BookNotFoundException;
 import com.kanna.elastic.service.exception.DuplicateIsbnException;
+import com.kanna.elastic.util.ESUtil;
+import co.elastic.clients.elasticsearch.core.SearchResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
@@ -12,11 +16,14 @@ import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.stereotype.Service;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import static co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders.match;
+import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 
 @Service
 public class BookServiceImpl implements BookService {
@@ -25,6 +32,8 @@ public class BookServiceImpl implements BookService {
     private BookRepo bookRepo;
     @Autowired
     private ElasticsearchTemplate elasticsearchTemplate;
+    @Autowired
+    private ElasticsearchClient elasticsearchClient;
     @Override
     public Optional<Book> getByIsbn(String isbn) {
         return bookRepo.findByIsbn(isbn);
@@ -53,6 +62,15 @@ public class BookServiceImpl implements BookService {
                 .stream().map(SearchHit::getContent).toList();
     }
 
+    public List<Book> findByTitleAndAuthorFuzzy(String title, String author) {
+        var criteria = QueryBuilders.bool(builder -> builder.must(
+                match(queryAuthor -> queryAuthor.field("authorName").fuzziness("2")),
+                match(queryTitle -> queryTitle.field("title").fuzziness("2"))
+                ));
+        return elasticsearchTemplate.search(NativeQuery.builder().withQuery(criteria).build(), Book.class)
+                .stream().map(SearchHit::getContent).toList();
+    }
+
     @Override
     public Book create(Book book) throws DuplicateIsbnException {
         if (getByIsbn(book.getIsbn()).isEmpty()) {
@@ -75,5 +93,14 @@ public class BookServiceImpl implements BookService {
         oldBook.setPublicationYear(book.getPublicationYear());
         oldBook.setTitle(book.getTitle());
         return bookRepo.save(oldBook);
+    }
+
+    @Override
+    public SearchResponse<Book> fuzzySearch(String fuzzyWord) throws IOException {
+        Supplier<Query> querySupplier = ESUtil.getSupplier(fuzzyWord);
+        SearchResponse<Book> response = elasticsearchClient
+                .search(s->s.index("books").query(querySupplier.get()), Book.class);
+        System.out.println(querySupplier.get().toString());
+        return response;
     }
 }

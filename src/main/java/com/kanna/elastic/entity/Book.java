@@ -1,9 +1,11 @@
 package com.kanna.elastic.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 
 @Document(indexName = "books")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Book {
 
     @Id

@@ -1,5 +1,7 @@
 package com.kanna.elastic.controller;
 
+import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.core.search.Hit;
 import com.kanna.elastic.entity.Book;
 import com.kanna.elastic.service.BookService;
 import com.kanna.elastic.service.exception.BookNotFoundException;
@@ -8,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -53,6 +57,19 @@ public class BookController {
     public void deleteBook(@PathVariable String id) {
         bookService.deleteById(id);
     }
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping(value = "/fuzzySearch/{fuzzyWord}")
+    public List<Book> fuzzySearch(@PathVariable String fuzzyWord) throws IOException {
+        SearchResponse<Book> searchResponse = bookService.fuzzySearch(fuzzyWord);
+        List<Hit<Book>> hitList = searchResponse.hits().hits();
+      //  System.out.println(hitList);
+        List<Book> bookList = new ArrayList<>();
+        for(Hit<Book> hit :hitList){
+            bookList.add(hit.source());
+        }
+        return bookList;
+    }
+
 
     public static class BookDto {
 

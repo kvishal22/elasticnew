@@ -69,6 +69,15 @@ public class BookController {
         }
         return bookList;
     }
+    @GetMapping("/autocomplete")
+    public List<Book> autocompleteSuggestions(@RequestParam String prefix) {
+        return bookService.autocompleteSuggestions(prefix);
+    }
+
+    @GetMapping("/autocompleteUsingQuery")
+    public List<Book> autocompleteSuggestionsUsingQuery(@RequestParam String prefix) {
+        return bookService.autocompleteSuggestionsUsingQuery(prefix);
+    }
 
 
     public static class BookDto {

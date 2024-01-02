@@ -25,5 +25,6 @@ public interface BookService {
 
     Book update(String id, Book book) throws BookNotFoundException;
     SearchResponse<Book> fuzzySearch(String fuzzyWord) throws IOException;
-
+     List<Book> autocompleteSuggestions(String prefix);
+    List<Book> autocompleteSuggestionsUsingQuery(String prefix);
 }

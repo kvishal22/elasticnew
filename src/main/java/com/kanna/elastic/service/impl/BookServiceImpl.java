@@ -103,4 +103,14 @@ public class BookServiceImpl implements BookService {
         System.out.println(querySupplier.get().toString());
         return response;
     }
+
+    @Override
+    public List<Book> autocompleteSuggestions(String prefix) {
+        return bookRepo.findByTitleIgnoreCase(prefix);
+    }
+    @Override
+    public List<Book> autocompleteSuggestionsUsingQuery(String prefix) {
+        return bookRepo.autocompleteSuggestionsUsingQuery(prefix);
+    }
+
 }
